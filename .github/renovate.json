@@ -1,0 +1,61 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":disableRateLimiting"
+  ],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch",
+      "automerge": true
+    },
+    {
+      "matchPackageNames": ["next", "react", "react-dom"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "matchPackagePatterns": ["^@types/"],
+      "groupName": "type definitions",
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": ["eslint", "@typescript-eslint"],
+      "groupName": "linters",
+      "automerge": true
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ],
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 10,
+  "rangeStrategy": "bump",
+  "separateMajorMinor": true,
+  "timezone": "America/Caracas",
+  "schedule": ["before 3am on monday"],
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "Renovate Dashboard",
+  "rebaseWhen": "behind-base-branch",
+  "labels": ["dependencies", "renovate"],
+  "commitMessagePrefix": "⬆️ ",
+  "commitMessageAction": "update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "ignoreTests": true,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"],
+    "assignees": ["@mr-robots"]
+  }
+}

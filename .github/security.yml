@@ -1,0 +1,35 @@
+# GitHub Advanced Security Configuration
+
+# Enable automatic security updates for dependencies
+dependency_updates:
+  schedule: "weekly"
+  security_updates: true
+  all_updates: false
+
+# Code scanning configuration
+code_scanning:
+  default_query_suite: security-extended
+  severity_cutoff: "medium"
+  
+# Secret scanning configuration
+secret_scanning:
+  push_protection: true
+  validity_checks: true
+  
+# Dependency review configuration
+dependency_review:
+  severity_cutoff: "high"
+  fail_on_severity: "critical"
+  
+# Security advisories
+security_advisories:
+  enable_notifications: true
+  auto_approve_security_fixes: false
+  
+# Branch protection rules (should be configured in repo settings)
+# Recommended minimum rules:
+# - Require status checks to pass before merging
+# - Require pull request reviews
+# - Include administrators
+# - Require conversation resolution
+# - Require signed commits

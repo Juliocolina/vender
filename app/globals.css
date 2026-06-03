@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  /* Aquí definimos los colores de nuestra empresa para v4 */
+  --color-vender-blue: #002147;
+  --color-vender-gold: #d4af37;
+  --color-vender-dark: #00152e;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: var(--color-vender-blue);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  overflow-x: hidden;
+}
