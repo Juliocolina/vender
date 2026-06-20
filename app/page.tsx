@@ -48,12 +48,13 @@ export default function Home() {
             {/* Imagen principal */}
             <div className="relative w-[300px] sm:w-[400px] lg:w-[500px] h-[400px] sm:h-[500px] lg:h-[600px] shadow-2xl rounded-[2.5rem] overflow-hidden border-8 border-white transition-transform duration-500 hover:scale-105">
               <Image
-                src="/whatsapp-catalogo.png"
+                src="/whatsapp-catalogo.webp"
                 alt="Transición de WhatsApp a Catálogo Digital"
                 fill
                 sizes="(max-width: 640px) 300px, (max-width: 1024px) 400px, 500px"
                 className="object-cover"
                 priority
+                quality={85}
               />
               
               {/* Indicador visual minimalista */}
