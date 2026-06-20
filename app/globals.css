@@ -7,6 +7,18 @@
   --color-vender-dark: #00152e;
 }
 
+@layer utilities {
+  .glass-effect {
+    @apply backdrop-blur-sm bg-vender-blue/90 border-white/10;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  
+  .glass-overlay {
+    @apply absolute inset-0 -z-10;
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: var(--color-vender-blue);
