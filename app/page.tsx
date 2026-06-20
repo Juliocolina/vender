@@ -54,7 +54,7 @@ export default function Home() {
                 sizes="(max-width: 640px) 300px, (max-width: 1024px) 400px, 500px"
                 className="object-cover"
                 priority
-                quality={85}
+                quality={75}
               />
               
               {/* Indicador visual minimalista */}
