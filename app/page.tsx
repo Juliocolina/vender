@@ -7,7 +7,7 @@ export default function Home() {
     <div className="min-h-screen bg-white font-sans text-vender-blue overflow-x-hidden">
       
       {/* --- SECCIÓN HERO - ESTRATEGIA: DEL CAOS AL ORDEN --- */}
-  <section id="solucion" className="relative pt-16 lg:pt-24 pb-20 px-6 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
+      <section id="solucion" className="relative pt-16 lg:pt-24 pb-20 px-6 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
         
         {/* IZQUIERDA: TEXTO DE IMPACTO */}
         <div className="flex-1 text-center lg:text-left space-y-8 z-10 max-w-2xl">
@@ -23,15 +23,19 @@ export default function Home() {
               </span>.
             </p>
 
-            <p className="text-xl sm:text-2xl text-vender-blue font-bold leading-snug">
-              Pasa a tu propio <span className="bg-vender-gold/15 px-2 py-0.5 rounded-lg text-vender-blue">catálogo digital profesional</span> en segundos.
-            </p>
-          </div>
+            {/* BOTÓN CON NUEVO COPY */}
+            <div className="pt-4">
+              <button className="bg-vender-blue text-white font-black py-4 px-10 rounded-2xl text-lg hover:bg-vender-dark transition-all shadow-xl hover:scale-105 uppercase tracking-widest">
+                Haz crecer mis ventas hoy
+              </button>
+            </div>
 
-          <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-            <button className="bg-vender-gold text-vender-blue font-black py-5 px-12 rounded-2xl shadow-[0_15px_30px_rgba(212,175,55,0.3)] hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-xs sm:text-sm w-full sm:w-auto border-2 border-vender-blue hover:border-vender-blue/80">
-              Crear mi catálogo gratis
-            </button>
+            {/* LÍNEA DE PRUEBA SOCIAL */}
+            <div className="mt-6 text-center lg:text-left">
+              <p className="text-gray-500 font-medium text-sm">
+                Únete a más de <span className="font-bold text-vender-blue underline decoration-vender-gold">500+ emprendedores</span> que ya usan VENDER.
+              </p>
+            </div>
           </div>
         </div>
 
