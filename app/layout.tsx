@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from '@clerk/nextjs'; // Importamos el provider
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 
@@ -18,11 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body>
-        <Navbar />
-        <main>{children}</main>
-      </body>
-    </html>
+    <ClerkProvider> {/* Envolvemos todo el layout */}
+      <html lang="es">
+        <body>
+          <Navbar />
+          <main>{children}</main>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

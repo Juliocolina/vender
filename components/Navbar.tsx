@@ -1,13 +1,16 @@
 "use client";
+
 import { useState } from "react";
 import Link from 'next/link';
 import { Logo } from "./Logo";
+import AuthModal from "./AuthModal";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   return (
-<nav className="flex items-center justify-between px-6 sticky top-0 z-50 shadow-xl h-20 w-full">
+    <nav className="flex items-center justify-between px-6 sticky top-0 z-50 shadow-xl h-20 w-full">
       {/* Fondo desenfocado separado */}
       <div className="glass-overlay glass-effect border-b"></div>
       
@@ -33,8 +36,11 @@ export const Navbar = () => {
             Dashboard
           </Link>
           
-          {/* BOTÓN PRIORITARIO (Visible en móvil y escritorio) */}
-          <button className="bg-vender-gold hover:bg-[#b8962e] text-vender-blue font-black py-2.5 px-6 rounded-xl text-[10px] tracking-widest transition-all shadow-lg active:scale-95 uppercase relative z-20">
+          {/* BOTÓN PRIORITARIO - AHORA ABRE EL MODAL */}
+          <button 
+            onClick={() => setIsAuthModalOpen(true)}
+            className="bg-vender-gold hover:bg-[#b8962e] text-vender-blue font-black py-2.5 px-6 rounded-xl text-[10px] tracking-widest transition-all shadow-lg active:scale-95 uppercase relative z-20"
+          >
             Empezar
           </button>
 
@@ -70,6 +76,12 @@ export const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* MODAL DE AUTENTICACIÓN */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
 
       {isOpen && <div onClick={() => setIsOpen(false)} className="fixed inset-0 bg-black/50 z-40 md:hidden"></div>}
     </nav>

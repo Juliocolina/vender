@@ -142,3 +142,5 @@ temp/
 
 # Package manager specific
 yarn-error.log
+# clerk configuration (can include secrets)
+/.clerk/

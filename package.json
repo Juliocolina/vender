@@ -13,6 +13,7 @@
     "ci": "npm ci --only=production"
   },
   "dependencies": {
+    "@clerk/nextjs": "7.5.7",
     "next": "16.2.7",
     "react": "19.2.7",
     "react-dom": "19.2.7"
