@@ -7,7 +7,8 @@ import AuthModal from "./AuthModal";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
 
   return (
     <nav className="flex items-center justify-between px-6 sticky top-0 z-50 shadow-xl h-20 w-full">
@@ -32,13 +33,16 @@ export const Navbar = () => {
         <div className="flex items-center gap-4 shrink-0 relative z-10">
           
           {/* DASHBOARD (Escritorio) */}
-          <Link href="/login" className="hidden md:flex text-vender-gold text-[11px] font-black tracking-[0.2em] uppercase hover:text-white transition-colors">
+          <button 
+            onClick={() => setIsSignInModalOpen(true)}
+            className="hidden md:flex text-vender-gold text-[11px] font-black tracking-[0.2em] uppercase hover:text-white transition-colors relative z-20"
+          >
             Dashboard
-          </Link>
+          </button>
           
           {/* BOTÓN PRIORITARIO - AHORA ABRE EL MODAL */}
           <button 
-            onClick={() => setIsAuthModalOpen(true)}
+            onClick={() => setIsSignUpModalOpen(true)}
             className="bg-vender-gold hover:bg-[#b8962e] text-vender-blue font-black py-2.5 px-6 rounded-xl text-[10px] tracking-widest transition-all shadow-lg active:scale-95 uppercase relative z-20"
           >
             Empezar
@@ -70,17 +74,31 @@ export const Navbar = () => {
             <Link href="#solucion" onClick={() => setIsOpen(false)} className="hover:text-vender-gold transition">Solución</Link>
             <Link href="#contacto" onClick={() => setIsOpen(false)} className="hover:text-vender-gold transition">Contacto</Link>
             <hr className="border-white/10" />
-            <Link href="/login" onClick={() => setIsOpen(false)} className="text-vender-gold flex items-center gap-2 mt-2">
+            <button 
+              onClick={() => {
+                setIsOpen(false);
+                setIsSignInModalOpen(true);
+              }}
+              className="text-vender-gold flex items-center gap-2 mt-2 hover:text-white transition-colors"
+            >
               <span className="text-lg">👤</span> Dashboard
-            </Link>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* MODAL DE AUTENTICACIÓN */}
+      {/* MODAL DE REGISTRO (para botón "Empezar") */}
       <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
+        isOpen={isSignUpModalOpen} 
+        onClose={() => setIsSignUpModalOpen(false)} 
+        defaultTab="signup"
+      />
+
+      {/* MODAL DE LOGIN (para botón "Dashboard") */}
+      <AuthModal 
+        isOpen={isSignInModalOpen} 
+        onClose={() => setIsSignInModalOpen(false)} 
+        defaultTab="signin"
       />
 
       {isOpen && <div onClick={() => setIsOpen(false)} className="fixed inset-0 bg-black/50 z-40 md:hidden"></div>}

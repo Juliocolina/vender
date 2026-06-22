@@ -1,8 +1,13 @@
-import React from 'react';
+"use client";
+
+import { useState } from 'react';
 import { Logo } from '@/components/Logo';
 import Image from 'next/image';
+import AuthModal from '@/components/AuthModal';
 
 export default function Home() {
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white font-sans text-vender-blue overflow-x-hidden">
       
@@ -25,7 +30,10 @@ export default function Home() {
 
             {/* BOTÓN CON NUEVO COPY */}
             <div className="pt-4">
-              <button className="bg-vender-blue text-white font-black py-4 px-10 rounded-2xl text-lg hover:bg-vender-dark transition-all shadow-xl hover:scale-105 uppercase tracking-widest">
+              <button 
+                onClick={() => setIsSignUpModalOpen(true)}
+                className="bg-vender-blue text-white font-black py-4 px-10 rounded-2xl text-lg hover:bg-vender-dark transition-all shadow-xl hover:scale-105 uppercase tracking-widest"
+              >
                 Haz crecer mis ventas hoy
               </button>
             </div>
@@ -110,6 +118,13 @@ export default function Home() {
           © {new Date().getFullYear()} VENDER — Hecho con ❤️ en Venezuela[cite: 2]
         </div>
       </footer>
+
+      {/* MODAL DE REGISTRO (para botón "Haz crecer mis ventas hoy") */}
+      <AuthModal 
+        isOpen={isSignUpModalOpen} 
+        onClose={() => setIsSignUpModalOpen(false)} 
+        defaultTab="signup"
+      />
       
     </div>
   );

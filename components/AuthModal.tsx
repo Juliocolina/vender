@@ -7,10 +7,15 @@ import { useState } from "react";
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultTab?: 'signin' | 'signup';
 }
 
-export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signup');
+export default function AuthModal({ 
+  isOpen, 
+  onClose, 
+  defaultTab = 'signup' 
+}: AuthModalProps) {
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(defaultTab);
   
   if (!isOpen) return null;
 
