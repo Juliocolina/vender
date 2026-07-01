@@ -1,0 +1,22 @@
+[33m5819d03a[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m feat: actualización del dashboard
+[33m01e1b287[m[33m ([m[1;31morigin/main[m[33m)[m feat: actualización del dashboard con redes sociales y anuncios
+[33meca9368d[m fix: use UserButton without properties for Clerk v7.5.7 compatibility - afterSignOutUrl and signOutOptions not supported
+[33m57f2026c[m fix: correct UserButton prop from signOutOptions to afterSignOutUrl for Clerk v7.5.7 compatibility
+[33m86dbdd27[m refactor: optimize AuthModal flow with defaultTab prop
+[33mf62ec937[m fix: correct UserButton property from afterSignOutUrl to signOutOptions for Clerk v7.5.7 compatibility
+[33mf7ea8f01[m feat: complete Clerk authentication setup with proper redirection - Update AuthModal to include SignUp with forceRedirectUrl to /onboarding - Add tabs for switching between signup and signin - Create Clerk middleware for route protection - Create dashboard page for post-sign-in redirection - Ensure onboarding page exists and is properly structured
+[33me07702ac[m fix: configure Next.js Image Optimization - Add images config with webp/avif formats and qualities [75, 85] - Set image quality to 75 for optimal balance - Fix Next.js warning about unconfigured quality - Enable remote patterns for future external images
+[33m93d483a6[m feat: optimize landing page image performance - Convert whatsapp-catalogo.png to WebP format (881KB → 102KB, 88% reduction) - Update Image component to use .webp with quality optimization - Remove original PNG file to reduce bundle size - Improve page load speed and SEO performance
+[33me46f4f9e[m chore: clean unused public assets - Remove 5 unused SVG files (file.svg, globe.svg, next.svg, vercel.svg, window.svg) - Keep only whatsapp-catalogo.png which is used in landing page - Reduce public directory from 7 files (912KB) to 1 file (884KB) - Optimize project bundle size and maintainability
+[33mbd2f4296[m feat: complete documentation reorganization - Create integrated README.md with full system overview - Organize documentation into docs/{vision,architecture,development,api} - Move all documentation files to organized structure - Create docs/README.md as documentation index - Maintain all original content with proper linking
+[33m7da7462a[m fix: remove package-lock from gitignore and track it
+[33mb3bdf7cf[m fix: update GitHub workflows configuration - Remove npm cache from setup-node to avoid lock issues - Simplify ESLint command for better compatibility - Ensure consistent configuration across workflow files
+[33m7e3f98f7[m chore: purge ignored files and rebuild git index
+[33m1e167327[m fix: navbar glassmorphism and update ci-cd workflow
+[33m6f852fad[m fix: GitHub Actions workflows and Navbar glass effect - Replace broken bandit-scan with reliable CI/CD pipeline - Fix glassmorphism effect in Navbar with separate layers - Add utility classes for reusable glass effects - Disable problematic security workflow temporarily
+[33m53c54fdd[m fix: update GitHub Actions workflows - Disable problematic security-scan.yml with broken bandit-scan - Add new reliable CI/CD pipeline - Fix Navbar glass effect implementation - Add utility classes for glassmorphism
+[33m7d37ec1b[m fix: remove node_modules from git tracking
+[33m0daa17b7[m Merge remote-tracking branch 'origin/main'
+[33mec3f0f77[m feat: implement comprehensive security measures post-GitHub attack
+[33m5708a78b[m Estructura de carpetas corregida para Vercel
+[33m4c0d8245[m Initial commit from Create Next App
