@@ -13,10 +13,13 @@
     "ci": "npm ci --only=production"
   },
   "dependencies": {
-    "@clerk/nextjs": "7.5.7",
+    "@supabase/ssr": "0.12.0",
+    "@supabase/supabase-js": "2.108.2",
+    "country-list": "2.4.1",
     "next": "16.2.7",
     "react": "19.2.7",
-    "react-dom": "19.2.7"
+    "react-dom": "19.2.7",
+    "react-phone-input-2": "2.15.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
