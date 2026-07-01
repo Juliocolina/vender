@@ -4,8 +4,9 @@ import { createBrowserClient } from './client'
 export async function signInWithGoogle() {
   const supabase = createBrowserClient()
   
-  // Usar URL de entorno para producción o localhost para desarrollo
-  const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || `${window.location.origin}/auth/callback`
+  const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
+    ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback` 
+    : `${window.location.origin}/auth/callback`
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -21,7 +22,6 @@ export async function signInWithGoogle() {
 
   return data
 }
-
 // Función para cerrar sesión
 export async function signOut() {
   const supabase = createBrowserClient()
