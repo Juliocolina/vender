@@ -3,34 +3,15 @@
 import { useState, useEffect } from "react";
 import { getUser } from "@/lib/supabase/auth";
 import { obtenerMiTienda, actualizarTienda, subirLogoTienda, Store } from "@/lib/supabase/tienda";
-import { obtenerCategorias } from "@/lib/supabase/productos";
+import { obtenerCategorias, crearCategoria, crearProducto, subirImagenProducto, obtenerProductos, Categoria as CategoriaDB, Producto as ProductoDB } from "@/lib/supabase/productos";
+import { obtenerBanners, crearBanner, subirImagenBanner, eliminarBanner, Banner as BannerDB } from "@/lib/supabase/banners";
 
 type Tab = "general" | "banners" | "redes" | "categorias" | "productos";
 
-// Tipos correctos según el esquema SQL
-interface Categoria {
-  id: string; // uuid
-  name: string;
-  slug: string;
-  productos_count?: number;
-}
-
-interface Banner {
-  id: string; // uuid
-  image_url: string;
-  position: number;
-  is_active: boolean;
-}
-
-interface Producto {
-  id: string; // uuid
-  name: string;
-  description: string | null;
-  price: number;
-  stock: number;
-  category_id: string | null; // uuid
-  image_url: string | null;
-}
+// Usar tipos de la base de datos
+type Categoria = CategoriaDB;
+type Producto = ProductoDB;
+type Banner = BannerDB;
 
 export function MiTienda({ onBack }: { onBack: () => void }) {
   const [activeTab, setActiveTab] = useState<Tab>("general");
@@ -134,7 +115,7 @@ export function MiTienda({ onBack }: { onBack: () => void }) {
                 onSave={cargarDatos}
               />
             )}
-            {activeTab === "banners" && <BannersTab storeId={storeId} />}
+            {activeTab === "banners" && <BannersTab storeId={storeId} categorias={categorias} />}
             {activeTab === "redes" && <RedesTab store={store} setStore={setStore} storeId={storeId} />}
             {activeTab === "categorias" && <CategoriasTab categorias={categorias} setCategorias={setCategorias} storeId={storeId} />}
             {activeTab === "productos" && <ProductosTab categorias={categorias} storeId={storeId} />}
@@ -271,25 +252,251 @@ function GeneralTab({ store, setStore, storeId, onSave }: {
   );
 }
 
-function BannersTab({ storeId }: { storeId: string | null }) {
+function BannersTab({ storeId, categorias }: { storeId: string | null; categorias: Categoria[] }) {
   const [banners, setBanners] = useState<Banner[]>([]);
-  
-  // TODO: Cargar banners desde la base de datos
-  
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [mostrarPreview, setMostrarPreview] = useState(false);
+  const [imagenFile, setImagenFile] = useState<File | null>(null);
+  const [imagenPreview, setImagenPreview] = useState('');
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
+  const [subiendo, setSubiendo] = useState(false);
+  const [creando, setCreando] = useState(false);
+
+  useEffect(() => {
+    if (storeId) {
+      cargarBanners();
+    }
+  }, [storeId]);
+
+  const cargarBanners = async () => {
+    if (!storeId) return;
+    const bannersData = await obtenerBanners(storeId);
+    setBanners(bannersData);
+  };
+
+  const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImagenFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setImagenPreview(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const abrirPreview = () => {
+    if (!imagenPreview) {
+      alert('Selecciona una imagen primero');
+      return;
+    }
+    setMostrarPreview(true);
+  };
+
+  const confirmarBanner = async () => {
+    if (!storeId || !imagenFile) return;
+
+    setCreando(true);
+    setSubiendo(true);
+
+    const imagenUrl = await subirImagenBanner(imagenFile, storeId);
+    setSubiendo(false);
+
+    if (!imagenUrl) {
+      alert('Error al subir la imagen');
+      setCreando(false);
+      return;
+    }
+
+    const nuevoBanner = await crearBanner(storeId, {
+      image_url: imagenUrl,
+      category_id: categoriaSeleccionada || undefined,
+    });
+
+    if (nuevoBanner) {
+      setBanners([nuevoBanner, ...banners]);
+      setMostrarFormulario(false);
+      setMostrarPreview(false);
+      setImagenFile(null);
+      setImagenPreview('');
+      setCategoriaSeleccionada('');
+    } else {
+      alert('Error al crear el banner');
+    }
+    setCreando(false);
+  };
+
+  const handleEliminarBanner = async (bannerId: string) => {
+    if (!confirm('¿Eliminar este banner?')) return;
+
+    const exito = await eliminarBanner(bannerId);
+    if (exito) {
+      setBanners(banners.filter(b => b.id !== bannerId));
+    } else {
+      alert('Error al eliminar el banner');
+    }
+  };
+
+  const categoriaNombre = (id: string) => {
+    const cat = categorias.find(c => c.id === id);
+    return cat?.name || '';
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-vender-blue">Banners Promocionales</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">{banners.length}/3</span>
-        </div>
+        <button
+          onClick={() => setMostrarFormulario(true)}
+          className="bg-vender-gold hover:bg-[#b8962e] text-vender-blue font-bold py-2 px-4 rounded-xl text-sm transition-colors"
+        >
+          + Crear Banner
+        </button>
       </div>
 
-      <div className="text-center py-12 bg-gray-50 rounded-xl">
-        <span className="text-4xl mb-2 block">🖼️</span>
-        <p className="text-gray-500 font-medium">Próximamente: Gestión de banners</p>
-        <p className="text-sm text-gray-400 mt-1">Agrega hasta 3 banners para promocionar tus ofertas</p>
-      </div>
+      {/* Formulario de creación */}
+      {mostrarFormulario && (
+        <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+          <h3 className="font-bold text-gray-800">Nuevo Banner</h3>
+
+          {/* Subir imagen */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Imagen del Banner</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImagenChange}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white"
+            />
+            {imagenPreview && (
+              <div className="mt-3 rounded-xl overflow-hidden bg-gray-200 h-40">
+                <img src={imagenPreview} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
+
+          {/* Selector de categoría */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Categoría (opcional)</label>
+            <select
+              value={categoriaSeleccionada}
+              onChange={(e) => setCategoriaSeleccionada(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-vender-gold focus:outline-none"
+            >
+              <option value="">Sin categoría (solo imagen)</option>
+              {categorias.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+            {categoriaSeleccionada && (
+              <p className="text-xs text-gray-500 mt-1">
+                Al hacer click, el cliente irá a: {categoriaNombre(categoriaSeleccionada)}
+              </p>
+            )}
+          </div>
+
+          {/* Botones */}
+          <div className="flex gap-2">
+            <button
+              onClick={abrirPreview}
+              disabled={!imagenPreview}
+              className="flex-1 bg-white border-2 border-vender-gold text-vender-blue font-bold py-3 rounded-xl hover:bg-vender-gold/10 transition-colors disabled:opacity-50"
+            >
+              👁️ Vista Previa
+            </button>
+            <button
+              onClick={() => {
+                setMostrarFormulario(false);
+                setImagenFile(null);
+                setImagenPreview('');
+                setCategoriaSeleccionada('');
+              }}
+              className="px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-600 font-bold hover:bg-gray-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de preview */}
+      {mostrarPreview && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="font-bold text-vender-blue">Vista Previa del Banner</h3>
+            </div>
+
+            {/* Banner preview */}
+            <div className="aspect-video bg-gray-100 relative">
+              <img src={imagenPreview} alt="Preview" className="w-full h-full object-cover" />
+              {categoriaSeleccionada && (
+                <div className="absolute bottom-3 left-3 bg-white/90 px-3 py-1.5 rounded-lg text-sm font-bold">
+                  🏷️ {categoriaNombre(categoriaSeleccionada)}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 space-y-3">
+              <p className="text-sm text-gray-600">
+                {categoriaSeleccionada
+                  ? 'Este banner redirigirá a la categoría seleccionada.'
+                  : 'Este banner mostrará solo la imagen.'}
+              </p>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={confirmarBanner}
+                  disabled={subiendo || creando}
+                  className="flex-1 bg-vender-gold text-vender-blue font-bold py-3 rounded-xl hover:bg-[#b8962e] transition-colors disabled:opacity-50"
+                >
+                  {subiendo ? 'Subiendo...' : creando ? 'Creando...' : '✓ Publicar Banner'}
+                </button>
+                <button
+                  onClick={() => setMostrarPreview(false)}
+                  className="px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-600 font-bold hover:bg-gray-100"
+                  disabled={subiendo || creando}
+                >
+                  Editar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lista de banners existentes */}
+      {banners.length === 0 && !mostrarFormulario && (
+        <div className="text-center py-12 bg-gray-50 rounded-xl">
+          <span className="text-4xl mb-2 block">🖼️</span>
+          <p className="text-gray-500 font-medium">No tienes banners creados</p>
+          <p className="text-sm text-gray-400 mt-1">Crea banners para promocionar tus ofertas</p>
+        </div>
+      )}
+
+      {banners.length > 0 && (
+        <div className="grid gap-4">
+          {banners.map((banner) => (
+            <div key={banner.id} className="relative rounded-xl overflow-hidden bg-gray-100 aspect-video group">
+              <img src={banner.image_url} alt="Banner" className="w-full h-full object-cover" />
+              {banner.category_id && (
+                <div className="absolute bottom-3 left-3 bg-white/90 px-3 py-1.5 rounded-lg text-sm font-bold">
+                  🏷️ {categoriaNombre(banner.category_id)}
+                </div>
+              )}
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => handleEliminarBanner(banner.id)}
+                  className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -390,27 +597,79 @@ function CategoriasTab({ categorias, setCategorias, storeId }: {
   setCategorias: (c: Categoria[]) => void;
   storeId: string | null;
 }) {
-  // TODO: Integrar con base de datos
-  // Por ahora solo muestra las categorías cargadas
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [nombreCategoria, setNombreCategoria] = useState('');
+  const [creando, setCreando] = useState(false);
+  
+  const crearNuevaCategoria = async () => {
+    if (!storeId || !nombreCategoria.trim()) return;
+    
+    setCreando(true);
+    const nuevaCategoria = await crearCategoria(storeId, nombreCategoria);
+    
+    if (nuevaCategoria) {
+      setCategorias([...categorias, { ...nuevaCategoria, productos_count: 0 }]);
+      setNombreCategoria('');
+      setMostrarFormulario(false);
+    } else {
+      alert('Error al crear la categoría');
+    }
+    setCreando(false);
+  };
   
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-vender-blue">Categorías</h2>
         <button 
+          onClick={() => setMostrarFormulario(true)}
           className="bg-vender-gold hover:bg-[#b8962e] text-vender-blue font-bold py-2 px-4 rounded-xl text-sm transition-colors"
         >
           + Nueva
         </button>
       </div>
 
-      {categorias.length === 0 ? (
+      {mostrarFormulario && (
+        <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+          <h3 className="font-bold text-gray-800">Nueva Categoría</h3>
+          <input
+            type="text"
+            value={nombreCategoria}
+            onChange={(e) => setNombreCategoria(e.target.value)}
+            placeholder="Nombre de la categoría"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-vender-gold focus:outline-none"
+            maxLength={50}
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={crearNuevaCategoria}
+              disabled={creando || !nombreCategoria.trim()}
+              className="flex-1 bg-vender-gold text-vender-blue font-bold py-2 rounded-xl disabled:opacity-50"
+            >
+              {creando ? 'Creando...' : 'Crear Categoría'}
+            </button>
+            <button
+              onClick={() => {
+                setMostrarFormulario(false);
+                setNombreCategoria('');
+              }}
+              className="px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-600 font-bold hover:bg-gray-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {categorias.length === 0 && !mostrarFormulario && (
         <div className="text-center py-12 bg-gray-50 rounded-xl">
           <span className="text-4xl mb-2 block">🏷️</span>
           <p className="text-gray-500 font-medium">No tienes categorías creadas</p>
           <p className="text-sm text-gray-400 mt-1">Crea categorías para organizar tus productos</p>
         </div>
-      ) : (
+      )}
+
+      {categorias.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {categorias.map((cat) => (
             <div key={cat.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
@@ -433,24 +692,206 @@ function ProductosTab({ categorias, storeId }: {
   categorias: Categoria[];
   storeId: string | null;
 }) {
-  // TODO: Cargar productos desde la base de datos
-  
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [creando, setCreando] = useState(false);
+  const [nombreProducto, setNombreProducto] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [precio, setPrecio] = useState('');
+  const [stock, setStock] = useState('1');
+  const [categoriaId, setCategoriaId] = useState('');
+  const [imagenFile, setImagenFile] = useState<File | null>(null);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+
+  useEffect(() => {
+    if (storeId) {
+      cargarProductos();
+    }
+  }, [storeId]);
+
+  const cargarProductos = async () => {
+    if (!storeId) return;
+    const productosData = await obtenerProductos(storeId);
+    setProductos(productosData);
+  };
+
+  const crearNuevoProducto = async () => {
+    if (!storeId || !nombreProducto.trim() || !precio) return;
+
+    setCreando(true);
+    let imagenUrl = '';
+
+    if (imagenFile) {
+      setSubiendoImagen(true);
+      imagenUrl = await subirImagenProducto(imagenFile, storeId) || '';
+      setSubiendoImagen(false);
+    }
+
+    const nuevoProducto = await crearProducto(storeId, {
+      name: nombreProducto,
+      description: descripcion || undefined,
+      price: parseFloat(precio),
+      stock: parseInt(stock),
+      category_id: categoriaId || undefined,
+      image_url: imagenUrl || undefined,
+    });
+
+    if (nuevoProducto) {
+      setProductos([nuevoProducto, ...productos]);
+      setNombreProducto('');
+      setDescripcion('');
+      setPrecio('');
+      setStock('1');
+      setCategoriaId('');
+      setImagenFile(null);
+      setMostrarFormulario(false);
+    } else {
+      alert('Error al crear el producto');
+    }
+    setCreando(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-vender-blue">Productos</h2>
         <button 
+          onClick={() => setMostrarFormulario(true)}
           className="bg-vender-gold hover:bg-[#b8962e] text-vender-blue font-bold py-2 px-4 rounded-xl text-sm transition-colors"
         >
           + Nuevo
         </button>
       </div>
 
-      <div className="text-center py-12 bg-gray-50 rounded-xl">
-        <span className="text-4xl mb-2 block">📦</span>
-        <p className="text-gray-500 font-medium">Gestiona tus productos</p>
-        <p className="text-sm text-gray-400 mt-1">Usa la sección de Productos en el menú principal</p>
-      </div>
+      {mostrarFormulario && (
+        <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+          <h3 className="font-bold text-gray-800">Nuevo Producto</h3>
+          
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Nombre *</label>
+            <input
+              type="text"
+              value={nombreProducto}
+              onChange={(e) => setNombreProducto(e.target.value)}
+              placeholder="Nombre del producto"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-vender-gold focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Descripción</label>
+            <textarea
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+              placeholder="Descripción del producto"
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-vender-gold focus:outline-none resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Precio *</label>
+              <input
+                type="number"
+                value={precio}
+                onChange={(e) => setPrecio(e.target.value)}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-vender-gold focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Stock</label>
+              <input
+                type="number"
+                value={stock}
+                onChange={(e) => setStock(e.target.value)}
+                min="0"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-vender-gold focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Categoría</label>
+            <select
+              value={categoriaId}
+              onChange={(e) => setCategoriaId(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-vender-gold focus:outline-none"
+            >
+              <option value="">Sin categoría</option>
+              {categorias.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Imagen</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImagenFile(e.target.files?.[0] || null)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={crearNuevoProducto}
+              disabled={creando || !nombreProducto.trim() || !precio}
+              className="flex-1 bg-vender-gold text-vender-blue font-bold py-2 rounded-xl disabled:opacity-50"
+            >
+              {subiendoImagen ? 'Subiendo imagen...' : creando ? 'Creando...' : 'Crear Producto'}
+            </button>
+            <button
+              onClick={() => {
+                setMostrarFormulario(false);
+                setNombreProducto('');
+                setDescripcion('');
+                setPrecio('');
+                setStock('1');
+                setCategoriaId('');
+                setImagenFile(null);
+              }}
+              className="px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-600 font-bold hover:bg-gray-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {productos.length === 0 && !mostrarFormulario && (
+        <div className="text-center py-12 bg-gray-50 rounded-xl">
+          <span className="text-4xl mb-2 block">📦</span>
+          <p className="text-gray-500 font-medium">No tienes productos creados</p>
+          <p className="text-sm text-gray-400 mt-1">Agrega tu primer producto para empezar a vender</p>
+        </div>
+      )}
+
+      {productos.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {productos.map((prod) => (
+            <div key={prod.id} className="flex gap-4 p-4 bg-gray-50 rounded-xl">
+              <div className="w-20 h-20 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
+                {prod.image_url ? (
+                  <img src={prod.image_url} alt={prod.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">📦</div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-gray-800 truncate">{prod.name}</p>
+                <p className="text-sm text-gray-500">Stock: {prod.stock}</p>
+                <p className="text-vender-gold font-bold">${prod.price.toFixed(2)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
