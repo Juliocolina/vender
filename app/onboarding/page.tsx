@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+
+// Force dynamic rendering to avoid prerender errors
+export const dynamic = 'force-dynamic';
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import PhoneInput from 'react-phone-input-2';

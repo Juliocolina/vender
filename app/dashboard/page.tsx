@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+
+// Force dynamic rendering to avoid prerender errors
+export const dynamic = 'force-dynamic';
 import { getUser } from "@/lib/supabase/auth";
 import { subirAvatar, obtenerPerfil, actualizarPerfil } from "@/lib/supabase/perfil";
 import { User } from "@supabase/supabase-js";
