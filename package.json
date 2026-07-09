@@ -19,7 +19,8 @@
     "next": "16.2.7",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "react-phone-input-2": "2.15.1"
+    "react-phone-input-2": "2.15.1",
+    "xlsx": "0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -28,6 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
+    "eslint-plugin-security": "4.0.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

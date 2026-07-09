@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { Logo } from '@/components/Logo';
 import Image from 'next/image';
 import AuthModal from '@/components/AuthModal';
+import { Navbar } from '@/components/Navbar';
 
 export default function Home() {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-white font-sans text-vender-blue overflow-x-hidden">
+      <Navbar />
       
       {/* --- SECCIÓN HERO - ESTRATEGIA: DEL CAOS AL ORDEN --- */}
       <section id="solucion" className="relative pt-16 lg:pt-24 pb-20 px-6 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-24">

@@ -37,6 +37,23 @@ export async function GET(request: Request) {
       console.error('Error exchanging code for session:', error)
       return NextResponse.redirect(`${requestUrl.origin}/?error=auth_failed`)
     }
+    
+    // Verificar si el usuario ya tiene tienda configurada
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (user) {
+      // Buscar perfil del usuario
+      const { data: perfil } = await supabase
+        .from('perfiles')
+        .select('tienda_id')
+        .eq('id', user.id)
+        .single()
+      
+      // Si no tiene tienda, ir a onboarding
+      if (!perfil?.tienda_id) {
+        return NextResponse.redirect(`${requestUrl.origin}/onboarding`)
+      }
+    }
   }
 
   // Redirigir al usuario a dashboard después de autenticar

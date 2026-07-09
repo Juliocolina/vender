@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: "VENDER - Tú tienes el talento, nosotros la plataforma",
@@ -19,10 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body>
-        <Navbar />
-        <main>{children}</main>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

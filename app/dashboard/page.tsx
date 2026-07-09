@@ -1,105 +1,197 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { getUser } from "@/lib/supabase/auth";
+import { subirAvatar, obtenerPerfil, actualizarPerfil } from "@/lib/supabase/perfil";
+import { User } from "@supabase/supabase-js";
+import { MiTienda } from "@/components/tienda/MiTienda";
+import { MisProductos } from "@/components/productos/MisProductos";
+import { MisCampanas } from "@/components/campanas/MisCampanas";
+import { StickyBannerFooter } from "@/components/campanas/StickyBannerFooter";
+
+import { obtenerMiTienda, Store } from "@/lib/supabase/tienda";
+
+type View = "feed" | "mi-tienda" | "productos" | "campanas";
 
 export default function DashboardPage() {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [activeView, setActiveView] = useState<View>("feed");
+  const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const [nombreUsuario, setNombreUsuario] = useState<string>("Nombre Apellido");
+  const [tienda, setTienda] = useState<Store | null>(null);
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const scrollAmount = 320;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await getUser();
+      setUser(currentUser);
+      
+      if (currentUser?.id) {
+        const perfil = await obtenerPerfil(currentUser.id, currentUser.email);
+        if (perfil) {
+          setNombreUsuario(perfil.nombre || currentUser.user_metadata?.full_name || "Nombre Apellido");
+          if (perfil.avatar_url) {
+            setFotoPerfil(perfil.avatar_url);
+          }
+        }
+        
+        // Cargar tienda del usuario
+        const tiendaData = await obtenerMiTienda(currentUser.id);
+        if (tiendaData) {
+          setTienda(tiendaData);
+        }
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleSubirFoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    setSubiendoFoto(true);
+    
+    try {
+      // Subir a Storage
+      const avatarUrl = await subirAvatar(file, user.id);
+      
+      if (avatarUrl) {
+        // Guardar referencia en perfil
+        await actualizarPerfil(user.id, { avatar_url: avatarUrl });
+        setFotoPerfil(avatarUrl);
+      } else {
+        // Fallback: preview local
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setFotoPerfil(event.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (error) {
+      console.error('Error subiendo foto:', error);
+      // Fallback: preview local
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFotoPerfil(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
+    
+    setSubiendoFoto(false);
   };
 
+  // Mostrar vista Mi Tienda
+  if (activeView === "mi-tienda") {
+    return <MiTienda onBack={() => setActiveView("feed")} />;
+  }
+
+  // Mostrar vista Productos
+  if (activeView === "productos") {
+    return <MisProductos onBack={() => setActiveView("feed")} />;
+  }
+
+  // Mostrar vista Campañas
+  if (activeView === "campanas") {
+    return <MisCampanas onBack={() => setActiveView("feed")} />;
+  }
+
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex">
-      {/* 🛍️ Menú lateral izquierdo */}
-      <aside className="w-56 lg:w-64 bg-white border-r border-gray-200 p-4 sm:p-6 hidden md:block">
-        <h2 className="font-black text-xl lg:text-2xl mb-6 lg:mb-8 text-[#0a1a2f]">VENDER</h2>
-        <nav className="space-y-3 lg:space-y-4">
-          <a href="#" className="block p-2.5 lg:p-3 rounded-xl bg-[#d4af37] text-[#0a1a2f] font-bold text-sm lg:text-base">Inicio (Feed)</a>
-          <a href="#" className="block p-2.5 lg:p-3 text-gray-700 hover:bg-gray-100 rounded-xl text-sm lg:text-base">Explorar</a>
-          <a href="#" className="block p-2.5 lg:p-3 text-gray-700 hover:bg-gray-100 rounded-xl text-sm lg:text-base">Mensajes</a>
-        </nav>
-      </aside>
-
-      {/* Contenedor Principal */}
-      <main className="flex-1 overflow-y-auto flex flex-col pb-24">
-        {/* Banner de Portada */}
-        <div className="grid grid-cols-2 gap-4 px-4 sm:px-6 lg:px-8 py-4">
-          <div className="h-32 sm:h-40 bg-gradient-to-r from-gray-300 to-gray-400 w-full relative rounded-xl">
-            <button className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-black/50 text-white p-1.5 sm:p-2 rounded-full text-xs">📷 Editar Portada</button>
-          </div>
-          <div className="h-32 sm:h-40 bg-gradient-to-r from-gray-300 to-gray-400 w-full relative rounded-xl">
-            <button className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-black/50 text-white p-1.5 sm:p-2 rounded-full text-xs">📷 Editar Portada</button>
-          </div>
-        </div>
-
-        {/* Sección alineada */}
-        <section className="px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row items-center gap-6 md:gap-8">
-          <div className="flex flex-col items-center flex-shrink-0">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-200 border-4 border-white shadow-lg relative">
-               <button className="absolute bottom-0 right-0 bg-white p-1 rounded-full border text-xs sm:text-sm">📷</button>
+    <main className="flex-1 overflow-y-auto flex flex-col pb-24">
+        {/* Sección de perfil */}
+        <section className="px-4 sm:px-6 lg:px-8 py-8 flex flex-col items-center gap-4">
+          <label className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-200 border-4 border-white shadow-lg relative cursor-pointer group overflow-hidden">
+            {fotoPerfil ? (
+              <img src={fotoPerfil} alt="Foto de perfil" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              {subiendoFoto ? (
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <span className="text-white text-lg">📷</span>
+              )}
             </div>
-            <h2 className="text-base sm:text-lg font-black mt-2 text-center">Nombre Apellido</h2>
-            <div className="flex items-center gap-1.5 mt-1">
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleSubirFoto}
+              disabled={subiendoFoto}
+            />
+          </label>
+          <div className="text-center">
+            <h2 className="text-base sm:text-lg font-black">{nombreUsuario}</h2>
+            <div className="flex items-center justify-center gap-1.5 mt-1">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
-              <p className="text-gray-700 font-medium text-xs">usuario@email.com</p>
+              <p className="text-gray-600 font-medium text-xs">{user?.email || 'usuario@email.com'}</p>
             </div>
-          </div>
-
-          <div className="flex-1 w-full max-w-2xl lg:max-w-3xl relative flex items-center group">
-            <button onClick={() => scroll('left')} className="absolute -left-8 sm:-left-10 z-20 bg-white p-1.5 sm:p-2 rounded-full shadow-lg border hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 text-sm sm:text-base">&lt;</button>
-            <div ref={scrollRef} className="flex items-center gap-3 sm:gap-4 overflow-x-auto py-2 w-full px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <style jsx>{`div::-webkit-scrollbar { display: none; }`}</style>
-              <label className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-[#d4af37] flex flex-col items-center justify-center cursor-pointer flex-shrink-0 hover:bg-yellow-50 transition-colors">
-                <span className="text-lg sm:text-xl text-[#d4af37]">+</span>
-                <span className="text-[7px] sm:text-[8px] font-bold text-[#d4af37]">SUBIR</span>
-                <input type="file" className="hidden" />
-              </label>
-              {[...Array(20)].map((_, i) => (
-                <div key={i} className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-gray-300 p-0.5 flex-shrink-0 bg-white hover:border-gray-400 transition-colors">
-                  <div className="w-full h-full rounded-full bg-gray-200"></div>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => scroll('right')} className="absolute -right-8 sm:-right-10 z-20 bg-white p-1.5 sm:p-2 rounded-full shadow-lg border hover:bg-gray-50 transition-all opacity-0 group-hover:opacity-100 text-sm sm:text-base">&gt;</button>
           </div>
         </section>
-
-        {/* Contenedor de Puntos de Navegación */}
-        <div className="flex justify-center gap-1.5 pb-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className={`h-1.5 w-1.5 rounded-full ${i === 0 ? 'bg-gray-800' : 'bg-gray-300'}`}></div>
-          ))}
-        </div>
 
         {/* Contenido (Descripción, Métricas y Feed) */}
         <section className="px-4 sm:px-6 lg:px-8 space-y-6 max-w-7xl mx-auto">
           <div className="flex flex-col items-center text-center">
-            <p className="text-gray-700 text-sm max-w-lg">Red de Crecimiento Digital comercial y marketing digital. Impulsamos tu marca al siguiente nivel.</p>
+            <p className="text-gray-700 text-sm max-w-lg">
+              {tienda?.description || "Configura la descripción de tu tienda en Mi Tienda"}
+            </p>
             <div className="flex justify-center gap-3 sm:gap-4 mt-3 flex-wrap">
-              {[
-                { name: 'WhatsApp', icon: '/whatsapp.svg', color: '#25D366' },
-                { name: 'TikTok', icon: '/tiktok.svg', color: '#000000' },
-                { name: 'Instagram', icon: '/instagram.svg', color: '#E1306C' },
-                { name: 'Facebook', icon: '/facebook.svg', color: '#1877F2' }
-              ].map((platform) => (
-                <a 
-                  key={platform.name} 
-                  href="#" 
+              {tienda?.whatsapp && (
+                <a
+                  href={tienda.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center justify-center w-8 h-8 rounded-full hover:opacity-80 transition-opacity"
-                  style={{ backgroundColor: platform.color }}
+                  style={{ backgroundColor: '#25D366' }}
                 >
-                  <img src={platform.icon} alt={platform.name} className="h-4 w-4" style={{ filter: 'brightness(0) invert(1)' }} />
+                  <img src="/whatsapp.svg" alt="WhatsApp" className="h-4 w-4" style={{ filter: 'brightness(0) invert(1)' }} />
                 </a>
-              ))}
+              )}
+              {tienda?.instagram && (
+                <a
+                  href={tienda.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-8 h-8 rounded-full hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: '#E1306C' }}
+                >
+                  <img src="/instagram.svg" alt="Instagram" className="h-4 w-4" style={{ filter: 'brightness(0) invert(1)' }} />
+                </a>
+              )}
+              {tienda?.tiktok && (
+                <a
+                  href={tienda.tiktok}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-8 h-8 rounded-full hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: '#000000' }}
+                >
+                  <img src="/tiktok.svg" alt="TikTok" className="h-4 w-4" style={{ filter: 'brightness(0) invert(1)' }} />
+                </a>
+              )}
+              {tienda?.facebook && (
+                <a
+                  href={tienda.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-8 h-8 rounded-full hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: '#1877F2' }}
+                >
+                  <img src="/facebook.svg" alt="Facebook" className="h-4 w-4" style={{ filter: 'brightness(0) invert(1)' }} />
+                </a>
+              )}
+              {!tienda?.whatsapp && !tienda?.instagram && !tienda?.tiktok && !tienda?.facebook && (
+                <p className="text-xs text-gray-500">Agrega tus redes en Mi Tienda</p>
+              )}
             </div>
           </div>
 
@@ -107,15 +199,33 @@ export default function DashboardPage() {
             {[{t:'Tiendas',v:'1.2K'},{t:'Seguidores',v:'5.4K'},{t:'Campañas',v:'15K'}].map(m => (
               <div key={m.t} className="flex flex-col items-center text-center">
                 <h4 className="font-black text-sm sm:text-base mb-0.5">{m.v}</h4>
-                <p className="text-[7px] sm:text-[9px] text-gray-600 uppercase font-bold">{m.t}</p>
+                <p className="text-[10px] sm:text-xs text-gray-600 uppercase font-bold">{m.t}</p>
               </div>
             ))}
           </div>
 
           <div className="flex justify-center gap-4 sm:gap-8 border-b border-gray-200 pb-2">
-            {['🏠 Tiendas', '📦 Productos', '📢 Campañas'].map(t => (
-              <button key={t} className="pb-2 text-xs sm:text-sm font-bold text-gray-600 hover:text-[#0a1a2f] transition-colors">{t}</button>
-            ))}
+            <button 
+              onClick={() => setActiveView("mi-tienda")}
+              className="pb-2 text-xs sm:text-sm font-bold text-gray-600 hover:text-[#0a1a2f] transition-colors flex items-center gap-1.5"
+            >
+              <span>🏠</span>
+              <span>Tiendas</span>
+            </button>
+            <button 
+              onClick={() => setActiveView("productos")}
+              className="pb-2 text-xs sm:text-sm font-bold text-gray-600 hover:text-[#0a1a2f] transition-colors flex items-center gap-1.5"
+            >
+              <span>📦</span>
+              <span>Productos</span>
+            </button>
+            <button 
+              onClick={() => setActiveView("campanas")}
+              className="pb-2 text-xs sm:text-sm font-bold text-gray-600 hover:text-[#0a1a2f] transition-colors flex items-center gap-1.5"
+            >
+              <span>📢</span>
+              <span>Campañas</span>
+            </button>
           </div>
 
           {/* Feed de Tarjetas optimizado */}
@@ -171,22 +281,8 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* STICKY BANNER FOOTER - Fijo para conversiones */}
-        <div className="fixed bottom-0 left-0 md:left-56 lg:left-64 right-0 bg-[#1e293b] p-3 shadow-[0_-4px_10px_rgba(0,0,0,0.2)] z-50 flex items-center justify-between border-t border-gray-600">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center font-bold text-white text-[10px]">V</div>
-            <div>
-              <h3 className="text-white font-black text-xs md:text-sm">STIKY BANER FOOTER</h3>
-              <p className="text-gray-400 text-[9px] md:text-[10px]">Cleano, largo, capacidad de servicios</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="bg-[#25D366] text-white px-3 py-1.5 rounded-full text-[10px] font-bold">WhatsApp</button>
-            <button className="bg-white text-[#1e293b] px-3 py-1.5 rounded-full text-[10px] font-bold">Web</button>
-            <button className="bg-[#d4af37] text-white px-3 py-1.5 rounded-full text-[10px] font-bold">Llamar</button>
-          </div>
-        </div>
+        {/* STICKY BANNER FOOTER - Dinámico con campañas activas */}
+        <StickyBannerFooter />
       </main>
-    </div>
   );
 }

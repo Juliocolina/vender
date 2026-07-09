@@ -10,8 +10,8 @@ const publicRoutes = [
   '/api/auth/callback'
 ]
 
-export async function middleware(request: NextRequest) {
-  // Crear cliente de Supabase para middleware
+export async function proxy(request: NextRequest) {
+  // Crear cliente de Supabase para proxy
   const { supabase, response } = createMiddlewareClient(request)
   
   // Actualizar sesión
